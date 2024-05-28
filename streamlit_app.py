@@ -16,7 +16,7 @@ def get_book_info(isbn, api_key):
     if response.status_code == 200:
         data = response.json()
         st.write(f"API Response Data: {data}")  # デバッグ用
-        if "items" in data:
+        if "items" in data and len(data["items"]) > 0:
             return data["items"][0]["volumeInfo"]
     return None
 
