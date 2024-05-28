@@ -10,7 +10,11 @@ from io import BytesIO
 # APIから書籍データを取得する関数
 def get_book_info(isbn, api_key):
     url = f'https://www.googleapis.com/books/v1/volumes?q=isbn:{isbn}&key={api_key}'
-    response = requests.get(url)
+    headers = {
+        'X-Client-Data': 'client-data',
+        'X-Geo-Location': '37.7749,-122.4194'  # 例: サンフランシスコの緯度経度
+    }
+    response = requests.get(url, headers=headers)
     st.write(f"API URL: {url}")  # デバッグ用
     st.write(f"API Response Status Code: {response.status_code}")  # デバッグ用
     if response.status_code != 200:
