@@ -1,0 +1,7 @@
+streamlit
+streamlit-webrtc
+opencv-python-headless
+pyzbar
+requests
+Pillow
+numpy
