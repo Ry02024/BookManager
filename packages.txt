@@ -1,0 +1,5 @@
+libsm6
+libxext6
+libxrender-dev
+libopencv-dev
+zbar-tools
