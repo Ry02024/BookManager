@@ -11,8 +11,11 @@ from io import BytesIO
 def get_book_info(isbn):
     url = f'https://www.googleapis.com/books/v1/volumes?q=isbn:{isbn}'
     response = requests.get(url)
+    st.write(f"API URL: {url}")  # デバッグ用
+    st.write(f"API Response Status Code: {response.status_code}")  # デバッグ用
     if response.status_code == 200:
         data = response.json()
+        st.write(f"API Response Data: {data}")  # デバッグ用
         if "items" in data:
             return data["items"][0]["volumeInfo"]
     return None
@@ -20,6 +23,7 @@ def get_book_info(isbn):
 # 手動でISBN番号を入力する関数
 def manual_isbn_input():
     isbn = st.text_input("ISBN番号を入力してください（例: 9784297108434）")
+    st.write(f"入力されたISBN番号: {isbn}")  # デバッグ用
     if isbn:
         display_book_info(isbn)
 
@@ -67,9 +71,11 @@ def image_isbn_input():
         st.image(image, caption='アップロードされた画像', use_column_width=True)
         img_array = np.array(image.convert('RGB'))
         decoded_objects = decode(img_array)
+        st.write(f"デコードされたオブジェクト: {decoded_objects}")  # デバッグ用
         for obj in decoded_objects:
             barcode_data = obj.data.decode("utf-8")
             barcode_type = obj.type
+            st.write(f"認識したバーコード: {barcode_data} (タイプ: {barcode_type})")  # デバッグ用
             if barcode_type in ["EAN13", "ISBN13"] and barcode_data.startswith('97'):
                 st.session_state['barcode'] = barcode_data
                 break
