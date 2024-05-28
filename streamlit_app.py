@@ -13,6 +13,8 @@ def get_book_info(isbn, api_key):
     response = requests.get(url)
     st.write(f"API URL: {url}")  # デバッグ用
     st.write(f"API Response Status Code: {response.status_code}")  # デバッグ用
+    if response.status_code != 200:
+        st.write(f"Error: {response.text}")  # エラーメッセージの表示
     if response.status_code == 200:
         data = response.json()
         st.write(f"API Response Data: {data}")  # デバッグ用
