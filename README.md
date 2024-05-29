@@ -1,6 +1,6 @@
 # ISBN番号で書籍データを検索するアプリ
 
-このStreamlitアプリケーションは、Google Books APIを使用してISBN番号から書籍データを検索します。ユーザーは、手動でISBN番号を入力するか、カメラや画像からバーコードを読み取ってISBN番号を取得できます。
+このStreamlitアプリケーションは、OpenBD APIまたはGoogle Books APIを使用してISBN番号から書籍データを検索します。ユーザーは、手動でISBN番号を入力するか、カメラや画像からバーコードを読み取ってISBN番号を取得できます。
 
 ## 必要なもの
 
@@ -38,9 +38,11 @@ streamlit run app.py
 http://localhost:8501
 ```
 
-Google Books APIキーを入力します。
+### APIの選択方法を選びます：
 
-ISBN番号の入力方法を選択します：
+OpenBD API: デフォルトの設定で動作します。
+Google Books API: Google Cloud Consoleから取得したAPIキーを入力します。
+### ISBN番号の入力方法を選択します：
 
 ISBN番号を入力: 手動でISBN番号を入力します。
 カメラでバーコードを読み取る: カメラを使用してバーコードを読み取ります。
@@ -61,6 +63,9 @@ Pillow
 streamlit-webrtc
 ```
 ## バージョン情報
+### バージョン 1.2.0(2025.05.30)
+新機能: OpenBD APIまたはGoogle Books APIを選択して書籍情報を取得できるようにしました。
+修正: バーコードデータが97から始まるかどうかでISBNを判断するロジックに変更しました。
 ### バージョン 1.1.0
 変更点: Google Books APIからOpenBD APIに変更しました。理由: OpenBDは日本の書籍情報をより豊富に提供するため、Google Books APIに比べて日本の書籍検索に適しています。
 ### バージョン 1.0.0
