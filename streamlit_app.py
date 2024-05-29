@@ -7,30 +7,22 @@ import requests
 from PIL import Image
 from io import BytesIO
 
-# APIから書籍データを取得する関数
-def get_book_info(isbn, api_key):
-    url = f'https://www.googleapis.com/books/v1/volumes?q=isbn:{isbn}&key={api_key}'
-    headers = {
-        'X-Geo-Location': '35.6895,139.6917'  # 例: 東京の緯度経度
-    }
-    response = requests.get(url, headers=headers)
-    st.write(f"API URL: {url}")  # デバッグ用
-    st.write(f"API Response Status Code: {response.status_code}")  # デバッグ用
-    if response.status_code != 200:
-        st.write(f"Error: {response.text}")  # エラーメッセージの表示
+# OpenBD APIから書籍データを取得する関数
+def get_book_info_from_openbd(isbn):
+    url = f'https://api.openbd.jp/v1/get?isbn={isbn}'
+    response = requests.get(url)
     if response.status_code == 200:
         data = response.json()
-        st.write(f"API Response Data: {data}")  # デバッグ用
-        if "items" in data and len(data["items"]) > 0:
-            return data["items"][0]["volumeInfo"]
+        if data and data[0]:
+            return data[0]['summary']
     return None
 
 # 手動でISBN番号を入力する関数
-def manual_isbn_input(api_key):
+def manual_isbn_input():
     isbn = st.text_input("ISBN番号を入力してください（例: 9784297108434）")
     st.write(f"入力されたISBN番号: {isbn}")  # デバッグ用
     if isbn:
-        display_book_info(isbn, api_key)
+        display_book_info(isbn)
 
 # カメラでバーコードを読み取るクラス
 class BarcodeScanner(VideoTransformerBase):
@@ -57,19 +49,19 @@ class BarcodeScanner(VideoTransformerBase):
         return img
 
 # カメラでバーコードを読み取る関数
-def camera_isbn_input(api_key):
+def camera_isbn_input():
     if 'barcode' not in st.session_state:
         st.session_state['barcode'] = None
     webrtc_ctx = webrtc_streamer(key="barcode-scanner", video_transformer_factory=BarcodeScanner)
     if st.session_state['barcode']:
         barcode = st.session_state['barcode']
         st.success(f"バーコードが読み取られました: {barcode}")
-        display_book_info(barcode, api_key)
+        display_book_info(barcode)
     else:
         st.write("カメラをバーコードに向けてください。")
 
 # 画像からバーコードを読み取る関数
-def image_isbn_input(api_key):
+def image_isbn_input():
     uploaded_file = st.file_uploader("バーコードを含む画像をアップロードしてください", type=["png", "jpg", "jpeg"])
     if uploaded_file is not None:
         image = Image.open(uploaded_file)
@@ -86,39 +78,36 @@ def image_isbn_input(api_key):
                 break
         if 'barcode' in st.session_state and st.session_state['barcode']:
             st.success(f"バーコードが読み取られました: {st.session_state['barcode']}")
-            display_book_info(st.session_state['barcode'], api_key)
+            display_book_info(st.session_state['barcode'])
         else:
             st.error("バーコードが検出されませんでした。")
 
 # 書籍情報を表示する関数
-def display_book_info(isbn, api_key):
-    book_info = get_book_info(isbn, api_key)
+def display_book_info(isbn):
+    book_info = get_book_info_from_openbd(isbn)
     if book_info:
         st.write("書籍情報:")
         st.write(f"**タイトル**: {book_info.get('title', '不明')}")
-        st.write(f"**著者**: {', '.join(book_info.get('authors', ['不明']))}")
-        st.write(f"**出版年**: {book_info.get('publishedDate', '不明')}")
+        st.write(f"**著者**: {book_info.get('author', '不明')}")
         st.write(f"**出版社**: {book_info.get('publisher', '不明')}")
-        st.write(f"**説明**: {book_info.get('description', '不明')}")
-        if 'imageLinks' in book_info and 'thumbnail' in book_info['imageLinks']:
-            image_url = book_info['imageLinks']['thumbnail']
-            response = requests.get(image_url)
-            img = Image.open(BytesIO(response.content))
-            st.image(img, caption=book_info.get('title', '不明'))
+        st.write(f"**出版年**: {book_info.get('pubdate', '不明')}")
+        if 'cover' in book_info and book_info['cover']:
+            image_url = book_info['cover']
+            if image_url:  # URLが空でないことを確認
+                response = requests.get(image_url)
+                if response.status_code == 200:
+                    img = Image.open(BytesIO(response.content))
+                    st.image(img, caption=book_info.get('title', '不明'))
     else:
         st.error("書籍情報が見つかりませんでした。")
 
 st.title("ISBN番号で書籍データを検索するアプリ")
 
-api_key = st.text_input("Google Books APIキーを入力してください")
-if api_key:
-    option = st.radio("選択してください:", ("ISBN番号を入力", "カメラでバーコードを読み取る", "画像からバーコードを読み取る"))
+option = st.radio("選択してください:", ("ISBN番号を入力", "カメラでバーコードを読み取る", "画像からバーコードを読み取る"))
 
-    if option == "ISBN番号を入力":
-        manual_isbn_input(api_key)
-    elif option == "カメラでバーコードを読み取る":
-        camera_isbn_input(api_key)
-    elif option == "画像からバーコードを読み取る":
-        image_isbn_input(api_key)
-else:
-    st.warning("Google Books APIキーを入力してください。")
+if option == "ISBN番号を入力":
+    manual_isbn_input()
+elif option == "カメラでバーコードを読み取る":
+    camera_isbn_input()
+elif option == "画像からバーコードを読み取る":
+    image_isbn_input()
