@@ -60,6 +60,9 @@ pyzbar
 Pillow
 streamlit-webrtc
 ```
+## バージョン情報
+バージョン 1.1.0変更点: Google Books APIからOpenBD APIに変更しました。理由: OpenBDは日本の書籍情報をより豊富に提供するため、Google Books APIに比べて日本の書籍検索に適しています。
+バージョン 1.0.0初回リリース。Google Books APIを使用して書籍情報を取得する機能を提供。
 
 ## トラブルシューティング
 ### エラー: 403 Forbidden
