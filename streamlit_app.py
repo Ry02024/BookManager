@@ -11,8 +11,7 @@ from io import BytesIO
 def get_book_info(isbn, api_key):
     url = f'https://www.googleapis.com/books/v1/volumes?q=isbn:{isbn}&key={api_key}'
     headers = {
-        'X-Client-Data': 'client-data',
-        'X-Geo-Location': '37.7749,-122.4194'  # 例: サンフランシスコの緯度経度
+        'X-Geo-Location': '35.6895,139.6917'  # 例: 東京の緯度経度
     }
     response = requests.get(url, headers=headers)
     st.write(f"API URL: {url}")  # デバッグ用
