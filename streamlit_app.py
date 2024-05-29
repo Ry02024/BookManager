@@ -17,6 +17,16 @@ def get_book_info_from_openbd(isbn):
             return data[0]['summary']
     return None
 
+# Google Books APIから書籍データを取得する関数
+def get_book_info_from_google_books(isbn, api_key):
+    url = f'https://www.googleapis.com/books/v1/volumes?q=isbn:{isbn}&key={api_key}'
+    response = requests.get(url)
+    if response.status_code == 200:
+        data = response.json()
+        if "items" in data:
+            return data["items"][0]["volumeInfo"]
+    return None
+
 # 手動でISBN番号を入力する関数
 def manual_isbn_input():
     isbn = st.text_input("ISBN番号を入力してください（例: 9784297108434）")
@@ -73,7 +83,7 @@ def image_isbn_input():
             barcode_data = obj.data.decode("utf-8")
             barcode_type = obj.type
             st.write(f"認識したバーコード: {barcode_data} (タイプ: {barcode_type})")  # デバッグ用
-            if barcode_type in ["EAN13", "ISBN13"] and barcode_data.startswith('97'):
+            if barcode_data.startswith('97'):
                 st.session_state['barcode'] = barcode_data
                 break
         if 'barcode' in st.session_state and st.session_state['barcode']:
@@ -84,24 +94,34 @@ def image_isbn_input():
 
 # 書籍情報を表示する関数
 def display_book_info(isbn):
-    book_info = get_book_info_from_openbd(isbn)
+    if st.session_state['api_choice'] == 'OpenBD':
+        book_info = get_book_info_from_openbd(isbn)
+    else:
+        book_info = get_book_info_from_google_books(isbn, st.session_state['api_key'])
+
     if book_info:
         st.write("書籍情報:")
         st.write(f"**タイトル**: {book_info.get('title', '不明')}")
-        st.write(f"**著者**: {book_info.get('author', '不明')}")
+        st.write(f"**著者**: {', '.join(book_info.get('authors', ['不明']))}")
         st.write(f"**出版社**: {book_info.get('publisher', '不明')}")
-        st.write(f"**出版年**: {book_info.get('pubdate', '不明')}")
-        if 'cover' in book_info and book_info['cover']:
-            image_url = book_info['cover']
-            if image_url:  # URLが空でないことを確認
-                response = requests.get(image_url)
-                if response.status_code == 200:
-                    img = Image.open(BytesIO(response.content))
-                    st.image(img, caption=book_info.get('title', '不明'))
+        st.write(f"**出版年**: {book_info.get('publishedDate', '不明')}")
+        if 'imageLinks' in book_info and 'thumbnail' in book_info['imageLinks']:
+            image_url = book_info['imageLinks']['thumbnail']
+            response = requests.get(image_url)
+            if response.status_code == 200:
+                img = Image.open(BytesIO(response.content))
+                st.image(img, caption=book_info.get('title', '不明'))
     else:
         st.error("書籍情報が見つかりませんでした。")
 
 st.title("ISBN番号で書籍データを検索するアプリ")
+
+api_choice = st.radio("使用するAPIを選択してください:", ("OpenBD", "Google Books"))
+st.session_state['api_choice'] = api_choice
+
+if api_choice == "Google Books":
+    api_key = st.text_input("Google Books APIキーを入力してください")
+    st.session_state['api_key'] = api_key
 
 option = st.radio("選択してください:", ("ISBN番号を入力", "カメラでバーコードを読み取る", "画像からバーコードを読み取る"))
 
